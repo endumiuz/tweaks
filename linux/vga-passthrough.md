@@ -56,6 +56,26 @@ On Step 3, Choose how much memory and how many cpu threads you want to use
 
 On Step 4, Select storage (I use a dedicated SSD) -> "Select or create custom storage" -> "Manage..." -> "Add Pool" -> Set "Name:" to "/dev/sdb" and set "Type:" to "disk"
 
+If you want to use a dedicated SSD click here. see this section.
+
+---
+
+Select "Select or create custom storage" -> Click "Manage..." -> Click "Add Pool"
+
+Step 1, Set "Name:" to "sdb" and "Type:" to "disk"
+
+Step 2, Set "Target Path" to ""? and "Source Path" to "/dev/sdb"
+
+Click "Create new volume"
+
+Set "Name" to "sdb1"
+
+Select the new volume and click "Choose Volume"
+
+Set "Bus type" to "VirtIO"
+
+---
+
 On Step 5, Tick "Customize configuration before install", click "Finish"
 
 ### Add a CDROM device for the virtio driver iso
@@ -72,24 +92,6 @@ Click "Finish"
 
 wip:
 
-  Click "Add hardware"
-    Storage
-      Select "Select or create custom storage"
-      Click "Manage"
-        Click "Add Pool"
-          Step 1 of 2
-            Set "Name" to "sdb"?
-            Set "Type" to "disk: Physical Disk Device"
-            Click "Forward"
-          Step 2 of 2
-            Set "Target Path" to ""?
-            Set "Source Path" to "/dev/sdb"?
-            Click "Finish"
-        Click "Create new volume"
-          Set "Name" to "sdb1"?
-          Click "Finish"
-        Select the new volume and click "Choose Volume"
-      Set "Bus type" to "VirtIO"
   Click "Add hardware"
     PCI Host Device
       Add graphic card
