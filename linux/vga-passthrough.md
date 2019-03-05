@@ -1,5 +1,7 @@
 # VGA Passthrough on Solus
 
+Note: Solus might need to be installed in UEFI mode for this guide to work
+
 ## Bind GPU to vfio-pci
 
 Install dependencies:
