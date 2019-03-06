@@ -78,6 +78,30 @@ Set "Bus type" to "VirtIO"
 
 On Step 5, Tick "Customize configuration before install", click "Finish"
 
+### Configure the Virtual machine
+
+Boot Options
+
+Tick "VirtIO Disk 1" and "SATA CDROM 1"
+
+Move "SATA CDROM 1" to the top
+
+Select "SATA CDROM 1" -> Set "IO mode" to "threads"
+
+Select "SATA CDROM 2" -> Set "IO mode" to "threads"
+
+Select "VirtIO Disk 1" -> Set "IO mode" to "threads"
+
+NIC -> Set "Device model" to "virtio"
+
+Tablet -> Remove
+
+Sound ich9 -> Remove
+
+Serial 1 -> Remove?
+
+Controller VirtIO Serial 0 -> Remove?
+
 ### Add a CDROM device for the virtio driver iso
 
 Download [virtio iso](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/)
@@ -92,40 +116,28 @@ Click "Finish"
 
 wip:
 
-  Click "Add hardware"
-    PCI Host Device
-      Add graphic card
-      Click "Finish"
-      Repeat for graphic card hdmi audio
-  Click "Add hardware"
-    USB Host Device
-      Add Keyboard
-      Click "Finish"
-      Repeat for Mouse
-  Boot Options
-    Tick "VirtIO Disk 1" and "SATA CDROM 1"
-    Move "SATA CDROM 1" to the top
-  SATA CDROM 1
-    Set "IO mode" to "threads"
-  SATA CDROM 2
-    Set "IO mode" to "threads"
-  VirtIO Disk 1
-    Set "IO mode" to "threads"
-  NIC :nn:nn:nn
-    Set "Device model" to "virtio"
-  Tablet
-    Remove
-  Sound ich6
-    Remove
-  Serial 1
-    Remove?
-  Controller USB 0
-    Set "Model" to "USB 3"?
-  Controller VirtIO Serial 0
-    Remove?
+### Pass-through a graphics card to the virtual machine
 
-sudo eopkg install vim
+Click "Add hardware" -> Select "PCI Host Device"
+
+Select the graphic card -> Click "Finish"
+
+Repeat for graphic cards hdmi audio
+
+
+### Add keyboard and Mouse to the virtual machine
+
+Click "Add hardware" -> Select "USB Host Device"
+
+Select your keyboard -> Click "Finish"
+
+Repeat for your mouse
+
+```
 sudo virsh edit win10
+```
+
+```
 <domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
   <disk type='block' device='disk'>
     <source dev='/dev/sdb'/>
@@ -137,6 +149,7 @@ sudo virsh edit win10
     <qemu:arg value='memory-backend-file,id=ivshmem,share=on,mem-path=/dev/shm/looking-glass,size=32M'/>
   </qemu:commandline>
 </domain>
+```
 
 Install Windows
 Enable System Restore
