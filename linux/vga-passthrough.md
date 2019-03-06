@@ -263,7 +263,7 @@ sudo virsh edit VM_NAME
 Run every start of the host
 sudo ./create-shared-memory-file.sh
   touch /dev/shm/looking-glass
-  chown kim:kvm /dev/shm/looking-glass
+  chown root:kvm /dev/shm/looking-glass
   chmod 660 /dev/shm/looking-glass
 
 In Windows
