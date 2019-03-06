@@ -133,11 +133,14 @@ Select your keyboard -> Click "Finish"
 
 Repeat for your mouse
 
-```
-sudo virsh edit win10
+
+### Looking Glass
+
+```sh
+sudo virsh edit <vm_name>
 ```
 
-```
+```xml
 <domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
   <disk type='block' device='disk'>
     <source dev='/dev/sdb'/>
@@ -151,23 +154,13 @@ sudo virsh edit win10
 </domain>
 ```
 
-Install Windows
-Enable System Restore
-Install and run ShutUp10
-Reboot
-Run ShutUp10 again
-Install Network drivers
-Run Windows Update
-Run ShutUp10 again
-Add GPU to VM
-Install GPU Drivers
-Reboot host just to be sure
+### Nvidia error 43
 
------
+```
+virsh edit <vm_name>
+```
 
-Nvidia error 43
-
-virsh edit [vmname]
+```xml
   <features>
     <hyperv>
             <vendor_id state='on' value='1234567890ab'/>
@@ -176,27 +169,21 @@ virsh edit [vmname]
       <hidden state='on'/>
     </kvm>
   </features>
+```
 
 
------
 
-# Check CPU info in Windows
-wmic cpu get caption, deviceid, name, numberofcores, status
-
------
-
-- Performance Tuning -
-Virtual disk performance options = cache mode, and io mode
-
------
+### EVDEV Passthrough
 
 https://passthroughpo.st/using-evdev-passthrough-seamless-vm-input/
 
-- EVDEV Passthrough -
-# Test if it is the right device
+Test if it is the right device
+```bash
 cat /dev/input/by-id/MOUSE_NAME
 cat /dev/input/by-id/KEYBOARD_NAME
+```
 
+```xml
 <domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
   <qemu:commandline>
     <qemu:arg value='-object'/>
@@ -205,6 +192,7 @@ cat /dev/input/by-id/KEYBOARD_NAME
     <qemu:arg value='input-linux,id=kbd1,evdev=/dev/input/by-id/KEYBOARD_NAME,grab_all=on,repeat=on'/>
   </qemu:commandline>
 </domain>
+```
 
 /etc/libvirt/qemu.conf
 cgroup_device_acl = [
