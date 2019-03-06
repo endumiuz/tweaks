@@ -114,7 +114,6 @@ Click "Manage..." -> Click "Browse Local" -> Select the virtio-win iso file
 
 Click "Finish"
 
-wip:
 
 ### Pass-through a graphics card to the virtual machine
 
@@ -133,26 +132,6 @@ Select your keyboard -> Click "Finish"
 
 Repeat for your mouse
 
-
-### Looking Glass
-
-```sh
-sudo virsh edit <vm_name>
-```
-
-```xml
-<domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
-  <disk type='block' device='disk'>
-    <source dev='/dev/sdb'/>
-  </disk>
-  <qemu:commandline>
-    <qemu:arg value='-device'/>
-    <qemu:arg value='ivshmem-plain,memdev=ivshmem'/>
-    <qemu:arg value='-object'/>
-    <qemu:arg value='memory-backend-file,id=ivshmem,share=on,mem-path=/dev/shm/looking-glass,size=32M'/>
-  </qemu:commandline>
-</domain>
-```
 
 ### Nvidia error 43
 
@@ -194,7 +173,11 @@ cat /dev/input/by-id/KEYBOARD_NAME
 </domain>
 ```
 
+```
 /etc/libvirt/qemu.conf
+```
+
+```
 cgroup_device_acl = [
     "/dev/null", "/dev/full", "/dev/zero",
     "/dev/random", "/dev/urandom",
@@ -203,60 +186,76 @@ cgroup_device_acl = [
     "/dev/input/by-id/usb-Corsair_Corsair_Gaming_K65_LUX_RGB_Keyboard_0903001BAECC0C82570EB9B1F5001940-if01-event-kbd",
     "/dev/input/by-id/usb-Logitech_USB-PS_2_Optical_Mouse-event-mouse"
 ]
+```
 
+```
 sudo systemctl restart libvirtd.service
+```
+
 Switch the input devices from PS/2 to Virtio driver
 
------
 
-- Passing VM audio to host via PulseAudio -
-- (Use Scream Network Audio instead) -
-/etc/libvirt/qemu.conf
-user = "YOUR_USERNAME"
+### Looking Glass
 
-Replace 1000 with your user id (run id)
-<qemu:commandline>
-  <qemu:env name='QEMU_AUDIO_DRV' value='pa'/>
-  <qemu:env name='QEMU_PA_SERVER' value='/run/user/1000/pulse/native'/>
-</qemu:commandline>
+```sh
+sudo virsh edit <vm_name>
+```
 
-sudo systemctl restart libvirtd.service
-sudo systemctl restart pulseaudio.service
+```xml
+<domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+  <disk type='block' device='disk'>
+    <source dev='/dev/sdb'/>
+  </disk>
+  <qemu:commandline>
+    <qemu:arg value='-device'/>
+    <qemu:arg value='ivshmem-plain,memdev=ivshmem'/>
+    <qemu:arg value='-object'/>
+    <qemu:arg value='memory-backend-file,id=ivshmem,share=on,mem-path=/dev/shm/looking-glass,size=32M'/>
+  </qemu:commandline>
+</domain>
+```
 
------
-
-- Looking Glass -
 https://looking-glass.hostfission.com/
 https://forum.level1techs.com/t/looking-glass-guides-help-and-support/122387
 
-# Install dependencies
+Install dependencies
+```
 sudo eopkg install -c system.devel
 sudo eopkg install sdl2-devel sdl2-ttf-devel libnettle-devel spice-devel fontconfig-devel libx11-devel libconfig-devel libglu-devel
-
 sudo eopkg install mesalib-devel #not needed?
+```
 
-# Download the latest release from github
-# https://github.com/gnif/LookingGlass/releases
+Download the [latest release](https://github.com/gnif/LookingGlass/releases)
 
+Compile the client
+```
 mkdir client/build
 cd client/build
 cmake ../
 make
+```
 
-# Formula for memory size:
-# width x height x 4 x 2 + 2MB = total bytes
-# Round up to the nearest power of two
-# 1920 x 1080 = 17.82 = 32MB
+Formula for memory size:
+```
+width x height x 4 x 2 + 2MB = total bytes
+Round up to the nearest power of two (n^2)
+1920 x 1080 = 17.82 = 32MB
+```
 
+```
 sudo virsh edit VM_NAME
+```
+
+```xml
 <devices>
   <shmem name='looking-glass'>
     <model type='ivshmem-plain'/>
     <size unit='M'>32</size>
   </shmem>
 </devices>
+```
 
-# Run every start of the host
+Run every start of the host
 sudo ./create-shared-memory-file.sh
   touch /dev/shm/looking-glass
   chown kim:kvm /dev/shm/looking-glass
