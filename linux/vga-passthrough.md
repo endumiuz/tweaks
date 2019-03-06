@@ -2,6 +2,11 @@
 
 Note: Solus might need to be installed in UEFI mode for this guide to work
 
+## Pre-requirements
+
+At least two graphics cards
+
+
 ## Bind GPU to vfio-pci
 
 Install dependencies:
