@@ -4,16 +4,21 @@ Note: Solus might need to be installed in UEFI mode for this guide to work
 
 ## Pre-requirements
 
-At least two graphics cards
+Read the [Prerequisites section](https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF#Prerequisites) in the ArchWiki
+
+- CPU must support hardware virtualization and IOMMU
+- Motherboard must support IOMMU
+- Guest GPU must support UEFI
 
 
-## Bind GPU to vfio-pci
+## Isolating the GPU
 
 Install dependencies:
 ```bash
 sudo eopkg install dracut
 ```
-Download [vfio-bind.sh](https://raw.githubusercontent.com/endumiuz/vfio-bind/master/vfio-bind.sh) from https://github.com/endumiuz/vfio-bind
+
+Download [vfio-bind.sh](https://raw.githubusercontent.com/gmol1/vfio-bind/master/vfio-bind.sh) from https://github.com/gmol1/vfio-bind
 
 Run vfio-bind.sh
 ```bash
@@ -36,14 +41,6 @@ sudo gpasswd -a $USERNAME libvirt
 ```
 reboot
 
-## Performance optimizations
-
-Enable Hugepages
-```
-sudo ./hugepages.sh
-reboot
-cat /proc/meminfo
-```
 
 ## Install Windows in an virtual machine
 
@@ -81,33 +78,30 @@ Set "Bus type" to "VirtIO"
 
 ---
 
-On Step 5, Tick "Customize configuration before install", click "Finish"
+On Step 5, Tick "Customize configuration before install", click "Finish".
 
 ### Configure the Virtual machine
 
-Boot Options
+In the "Overview" section, set "Firmware" to "UEFI" and click "Apply".
+
+In the "CPUs" section, untick "Copy host CPU configuration" and set "Model" to "host-passthrough" (If it's not on the list, type it in).
+
+In the "Boot Options" section
 
 Tick "VirtIO Disk 1" and "SATA CDROM 1"
 
 Move "SATA CDROM 1" to the top
 
-Select "SATA CDROM 1" -> Set "IO mode" to "threads"
+In the "SATA CDROM 1" section, set "IO mode" to "threads"
 
-Select "SATA CDROM 2" -> Set "IO mode" to "threads"
+In the "SATA CDROM 2" section, set "IO mode" to "threads"
 
-Select "VirtIO Disk 1" -> Set "IO mode" to "threads"
+In the "VirtIO Disk 1" section, set "IO mode" to "threads"
 
-NIC -> Set "Device model" to "virtio"
+In the "NIC" section, set "Device model" to "virtio"
 
-Tablet -> Remove
 
-Sound ich9 -> Remove
-
-Serial 1 -> Remove?
-
-Controller VirtIO Serial 0 -> Remove?
-
-### Add a CDROM device for the virtio driver iso
+#### Add a CDROM device for the virtio driver iso
 
 Download [virtio iso](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/)
 
@@ -267,72 +261,34 @@ sudo ./create-shared-memory-file.sh
   chmod 660 /dev/shm/looking-glass
 
 In Windows
-  Download the ivshmem drivers: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/upstream-virtio/
-  Device Manager -> System Devices -> PCI standard RAM Controller -> Update driver (ivshmem) https://github.com/virtio-win/kvm-guest-drivers-windows/issues/217
-  Run the host application
 
+Download the ivshmem drivers: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/upstream-virtio/
+
+Device Manager -> System Devices -> PCI standard RAM Controller -> Update driver (ivshmem) https://github.com/virtio-win/kvm-guest-drivers-windows/issues/217
+
+Run the host application
+```
 cd client/build
-./looking-glass-client -k -F -Q -o opengl:mipmap=0 -s
+./looking-glass-client
+```
 
------
-- Create network bridge -
+## Performance optimizations
 
-nm-connection-editor -> Click "Add a new connection"
-  Select "Bridge" -> Click "Create"
-    Bridge
-      Click "Add" -> Select "Ethernet" -> Click "Create"
-        Ethernet
-          Set "Device" to your NIC
-          Click "Save"
-    Ipv4 Settings
-      Set "Method"
-    Click "Save"
+Enable Hugepages
+```
+sudo ./hugepages.sh
+reboot
+cat /proc/meminfo
+```
 
-Virtual Machine Manager
-  Select "QEMU/KVM" -> Edit -> Connection Details
-    Virtual Networks
-      Click "Add Network"
-        Step 1 of 4
-          Set "Network Name" to "isolated"
-          Click "Forward"
-        Step 2 of 4
-          Set "Network"
-          Click "Forward"
-        Step 3 of 4
-          Click "Forward"
-        Step 4 of 4
-          Select "Isolated virtual network"
-          Click "Finish"
 
-In Virtual Machine Manager (virt-manager) -> win10
-  Click "Add Hardware"
-    Network
-      Set "Network source" to "...isolated..."
-      Set "Device model" to "virtio"
-      Click "Finish"
+### To do
 
------
+- Create network bridge
+- [Scream Network Audio](https://github.com/duncanthrax/scream) - Sound ich9 -> Remove
+- More performance optimizations
 
--  Scream Network Audio -
-https://github.com/duncanthrax/scream
-
-Create a separate NIC for audio
-sudo eopkg install pulseaudio-devel alsa-lib-devel
-
-ncpa.cpl -> right-click network adapter -> properties
-  TCP/IPv4 -> Properties -> Advanced...
-    Untick "Automatic metric"
-    Select a value of 2 or higher
-Alternative: https://sites.google.com/site/embeddedsystesting/home/how-to-modify-or-delete-windows-default-multicast-routes
-
-cd Receivers/alsa/
-make
-./scream-alsa -i virbr1
-
-cd /Receivers/pulseaudio/
-make
-./scream-pulse
 
 ## References
-https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF#Setting_up_an_OVMF-based_guest_VM
+https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF
 https://solus-project.com/forums/viewtopic.php?f=11&t=1479&sid=597a58c06f144e3a778bc6a1d49e7de2
