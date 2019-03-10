@@ -94,8 +94,6 @@ Move "SATA CDROM 1" to the top
 
 In the "SATA CDROM 1" section, set "IO mode" to "threads"
 
-In the "SATA CDROM 2" section, set "IO mode" to "threads"
-
 In the "VirtIO Disk 1" section, set "IO mode" to "threads"
 
 In the "NIC" section, set "Device model" to "virtio"
@@ -113,6 +111,8 @@ Click "Manage..." -> Click "Browse Local" -> Select the virtio-win iso file
 
 Click "Finish"
 
+In the "SATA CDROM 2" section, set "IO mode" to "threads"
+
 
 ### Pass-through a graphics card to the virtual machine
 
@@ -120,16 +120,7 @@ Click "Add hardware" -> Select "PCI Host Device"
 
 Select the graphic card -> Click "Finish"
 
-Repeat for graphic cards hdmi audio
-
-
-### Add keyboard and Mouse to the virtual machine
-
-Click "Add hardware" -> Select "USB Host Device"
-
-Select your keyboard -> Click "Finish"
-
-Repeat for your mouse
+Repeat for graphic cards hdmi audio device
 
 
 ### Nvidia error 43
@@ -148,8 +139,6 @@ virsh edit <vm_name>
     </kvm>
   </features>
 ```
-
-
 
 ### EVDEV Passthrough
 
@@ -190,6 +179,15 @@ cgroup_device_acl = [
 ```
 sudo systemctl restart libvirtd.service
 ```
+
+
+#### Add keyboard and Mouse to the virtual machine
+
+Click "Add hardware" -> Select "USB Host Device"
+
+Select your keyboard -> Click "Finish"
+
+Repeat for your mouse
 
 Switch the input devices from PS/2 to Virtio driver
 
