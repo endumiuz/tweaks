@@ -1,16 +1,26 @@
 # VGA Passthrough on Solus
 
-Note: Solus might need to be installed in UEFI mode for this guide to work
+Notes:
+- WORK IN PROGRESS: This guide is not done yet!
+- Solus might need to be installed in UEFI mode for this guide to work
+- This guide does not (currently) work with identical guest and host GPUs
 
-Note: This guide does not work with identical guest and host GPUs
+Todo:
+- Add [Using identical guest and host GPUs](https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF#Using_identical_guest_and_host_GPUs) to the guide
+- Add how to create a network bridge
+- [Scream Network Audio](https://github.com/duncanthrax/scream) - Sound ich9 -> Remove
+- More performance optimizations
+
 
 ## Pre-requirements
 
 Read the [Prerequisites section](https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF#Prerequisites) in the ArchWiki
 
+Summary:
 - CPU must support hardware virtualization and IOMMU
 - Motherboard must support IOMMU
 - Guest GPU must support UEFI
+- Guest GPU must be connected to a display
 
 
 ## Isolating the GPU
@@ -28,15 +38,15 @@ sudo ./vfio-bind.sh
 ```
 Reboot
 
-Check that the device(s) now are using vfio-pci
+Verify that the device(s) now are using vfio-pci
 ```
-lspci -k
+lspci -nnk
 ```
 
 ## Install Virtual Machine Manager
 
 ```
-sudo eopkg it qemu virt-manager ovmf virt-viewer
+sudo eopkg install qemu virt-manager ovmf
 sudo systemctl enable libvirtd
 sudo gpasswd -a $USERNAME kvm
 sudo gpasswd -a $USERNAME libvirt
@@ -52,25 +62,34 @@ Start Virtual Machine Manager
 
 Click on "Create a new virtual machine" or go to "File" -> "New Virtual Machine"
 
-On Step 1, select "Local install media"
+In step 1, select "Local install media" and click "Forward"
 
-On Step 2, click "Browse.." -> "Browse Local" -> Select your Windows ISO file
+In step 2, click "Browse.." -> "Browse Local" -> Select your Windows ISO file
 
-On Step 3, Choose how much memory and how many cpu threads you want to use
+In step 3, choose how much memory and how many cpu threads you want to use (both of these can be changed later)
 
-On Step 4, Select storage (I use a dedicated SSD) -> "Select or create custom storage" -> "Manage..." -> "Add Pool" -> Set "Name:" to "/dev/sdb" and set "Type:" to "disk"
+wip: In step 4, If you have a dedicated SSD you want to use, see the []() section -> "Select or create custom storage" -> "Manage..." -> "Add Pool" -> Set "Name:" to "/dev/sdb" and set "Type:" to "disk"
 
-If you want to use a dedicated SSD click here. see this section.
+In step 5, tick "Customize configuration before install" and click "Finish".
 
 ---
 
+### Use a dedicated SSD
+
+wip: Find out the path to the drive you want to use (ex. /dev/sdb)
+```
+sudo parted --list
+```
+
 Select "Select or create custom storage" -> Click "Manage..." -> Click "Add Pool"
 
-Step 1, Set "Name:" to "sdb" and "Type:" to "disk"
+In step 1, Set "Name:" to "win_ssd" and "Type:" to "disk"
 
-Step 2, Set "Target Path" to ""? and "Source Path" to "/dev/sdb"
+In step 2:
+- Click "Browse" next to "Source Path", navigate to "/dev/disk/by-id/" and select the drive you want to use.
+- Tick "Build Pool"? and click "Finish"
 
-Click "Create new volume"
+Select the new pool and click "Create new volume"
 
 Set "Name" to "sdb1"
 
@@ -80,7 +99,6 @@ Set "Bus type" to "VirtIO"
 
 ---
 
-On Step 5, Tick "Customize configuration before install", click "Finish".
 
 ### Configure the Virtual machine
 
@@ -88,11 +106,7 @@ In the "Overview" section, set "Firmware" to "UEFI" and click "Apply".
 
 In the "CPUs" section, untick "Copy host CPU configuration" and set "Model" to "host-passthrough" (If it's not on the list, type it in).
 
-In the "Boot Options" section
-
-Tick "VirtIO Disk 1" and "SATA CDROM 1"
-
-Move "SATA CDROM 1" to the top
+In the "Boot Options" section, tick "VirtIO Disk 1" and "SATA CDROM 1" and move "SATA CDROM 1" to the top
 
 In the "SATA CDROM 1" section, set "IO mode" to "threads"
 
@@ -105,13 +119,9 @@ In the "NIC" section, set "Device model" to "virtio"
 
 Download [virtio iso](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/)
 
-Click "Add hardware" -> Select "Storage"
+Click "Add hardware" -> Select "Storage" and set "Device type" to "CDROM device"
 
-Set "Device type" to "CDROM device"
-
-Click "Manage..." -> Click "Browse Local" -> Select the virtio-win iso file
-
-Click "Finish"
+Click "Manage..." -> Click "Browse Local" -> Select the virtio-win iso file and click "Finish"
 
 In the "SATA CDROM 2" section, set "IO mode" to "threads"
 
@@ -255,16 +265,57 @@ sudo virsh edit VM_NAME
 ```
 
 Run every start of the host
-sudo ./create-shared-memory-file.sh
-  touch /dev/shm/looking-glass
-  chown root:kvm /dev/shm/looking-glass
-  chmod 660 /dev/shm/looking-glass
+
+
+```
+/etc/systemd/system/create-shared-memory-file.service
+```
+
+```
+[Service]
+ExecStart=/opt/looking_glass/create-shared-memory-file.sh
+```
+
+```
+/etc/systemd/system/create-shared-memory-file.timer
+```
+
+```
+[Unit]
+Description=Create shared memory file for Looking Glass
+
+[Timer]
+OnBootSec=0min
+
+[Install]
+WantedBy=timers.target
+```
+
+```
+/opt/looking_glass/create-shared-memory-file.sh
+```
+
+```
+#!/bin/bash
+# -*- coding: utf-8 -*-
+
+if [ "$EUID" -ne 0 ]; then
+    echo "This script must be run as root"
+    exit 1
+fi
+
+echo "Creating shared memory file..."
+touch /dev/shm/looking-glass
+chown root:kvm /dev/shm/looking-glass
+chmod 660 /dev/shm/looking-glass
+echo "Done"
+```
 
 In Windows
 
 Download the ivshmem drivers: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/upstream-virtio/
 
-Device Manager -> System Devices -> PCI standard RAM Controller -> Update driver (ivshmem) https://github.com/virtio-win/kvm-guest-drivers-windows/issues/217
+Open "Device Manager" -> System Devices -> PCI standard RAM Controller -> Update driver (ivshmem) https://github.com/virtio-win/kvm-guest-drivers-windows/issues/217
 
 Run the host application
 ```
@@ -285,13 +336,6 @@ sudo ./hugepages.sh
 reboot
 cat /proc/meminfo
 ```
-
-
-### To do
-
-- Create network bridge
-- [Scream Network Audio](https://github.com/duncanthrax/scream) - Sound ich9 -> Remove
-- More performance optimizations
 
 
 ## References
