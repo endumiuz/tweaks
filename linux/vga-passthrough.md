@@ -2,6 +2,8 @@
 
 Note: Solus might need to be installed in UEFI mode for this guide to work
 
+Note: This guide does not work with identical guest and host GPUs
+
 ## Pre-requirements
 
 Read the [Prerequisites section](https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF#Prerequisites) in the ArchWiki
@@ -270,7 +272,12 @@ cd client/build
 ./looking-glass-client
 ```
 
-## Performance optimizations
+## Performance tuning
+
+Todo:
+- CPU pinning
+- Transparent huge pages
+- Static huge pages
 
 Enable Hugepages
 ```
