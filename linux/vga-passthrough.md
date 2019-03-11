@@ -10,6 +10,7 @@ Todo:
 - Add how to create a network bridge
 - [Scream Network Audio](https://github.com/duncanthrax/scream) - Sound ich9 -> Remove
 - More performance optimizations
+- Add troubleshooting section and move nvidia error 43 there
 
 
 ## Pre-requirements
@@ -32,13 +33,13 @@ sudo eopkg install dracut
 
 Download [vfio-bind.sh](https://raw.githubusercontent.com/gmol1/vfio-bind/master/vfio-bind.sh) from https://github.com/gmol1/vfio-bind
 
-Run vfio-bind.sh
+Run vfio-bind.sh:
 ```bash
 sudo ./vfio-bind.sh
 ```
 Reboot
 
-Verify that the device(s) now are using vfio-pci
+Verify that the GPU and its HDMI audio now are using vfio-pci:
 ```
 lspci -nnk
 ```
@@ -51,10 +52,10 @@ sudo systemctl enable libvirtd
 sudo gpasswd -a $USERNAME kvm
 sudo gpasswd -a $USERNAME libvirt
 ```
-reboot
+Reboot
 
 
-## Install Windows in an virtual machine
+## Install Windows in a virtual machine
 
 Start Virtual Machine Manager
 
@@ -104,7 +105,7 @@ Set "Bus type" to "VirtIO"
 
 In the "Overview" section, set "Firmware" to "UEFI" and click "Apply".
 
-In the "CPUs" section, untick "Copy host CPU configuration" and set "Model" to "host-passthrough" (If it's not on the list, type it in).
+In the "CPUs" section, untick "Copy host CPU configuration" and set "Model" to "host-passthrough" (If it isn't on the list, type it in).
 
 In the "Boot Options" section, tick "VirtIO Disk 1" and "SATA CDROM 1" and move "SATA CDROM 1" to the top
 
@@ -317,7 +318,9 @@ Download the ivshmem drivers: https://fedorapeople.org/groups/virt/virtio-win/di
 
 Open "Device Manager" -> System Devices -> PCI standard RAM Controller -> Update driver (ivshmem) https://github.com/virtio-win/kvm-guest-drivers-windows/issues/217
 
-Run the host application
+Run the host application in Windows
+
+Run the client application in Solus
 ```
 cd client/build
 ./looking-glass-client
