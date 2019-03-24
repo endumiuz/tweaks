@@ -1,4 +1,4 @@
-# VGA Passthrough on Solus
+# GPU Passthrough on Solus
 
 Notes:
 - WORK IN PROGRESS: This guide is not done yet!
@@ -35,11 +35,12 @@ Download [vfio-bind.sh](https://raw.githubusercontent.com/gmol1/vfio-bind/master
 
 Run vfio-bind.sh:
 ```bash
+chmod +x vfio-bind.sh
 sudo ./vfio-bind.sh
 ```
 Reboot
 
-Verify that the GPU and its HDMI audio now are using vfio-pci:
+Verify that the GPU and its audio controller now are using vfio-pci:
 ```
 lspci -nnk
 ```
@@ -61,85 +62,82 @@ Start Virtual Machine Manager
 
 ### Create the Virtual Machine
 
-Click on "Create a new virtual machine" or go to "File" -> "New Virtual Machine"
+Click on "Create a new virtual machine" or go to "File" -> "New Virtual Machine".
 
-In step 1, select "Local install media" and click "Forward"
+In step 1, select "Local install media" and click "Forward".
 
-In step 2, click "Browse.." -> "Browse Local" -> Select your Windows ISO file
+In step 2, click "Browse.." -> "Browse Local" -> Select your Windows ISO file.
 
-In step 3, choose how much memory and how many cpu threads you want to use (both of these can be changed later)
+In step 3, choose how much memory and how many cpu threads you want to use (both of these can be changed later).
 
-wip: In step 4, If you have a dedicated SSD you want to use, see the []() section -> "Select or create custom storage" -> "Manage..." -> "Add Pool" -> Set "Name:" to "/dev/sdb" and set "Type:" to "disk"
+wip: In step 4, If you have a dedicated SSD you want to use, see [Use a dedicated SSD](Use-a-dedicated-SSD) -> "Select or create custom storage" -> "Manage..." -> "Add Pool" -> Set "Name:" to "/dev/sdb" and set "Type:" to "disk"
 
 In step 5, tick "Customize configuration before install" and click "Finish".
-
----
-
-### Use a dedicated SSD
-
-wip: Find out the path to the drive you want to use (ex. /dev/sdb)
-```
-sudo parted --list
-```
-
-Select "Select or create custom storage" -> Click "Manage..." -> Click "Add Pool"
-
-In step 1, Set "Name:" to "win_ssd" and "Type:" to "disk"
-
-In step 2:
-- Click "Browse" next to "Source Path", navigate to "/dev/disk/by-id/" and select the drive you want to use.
-- Tick "Build Pool"? and click "Finish"
-
-Select the new pool and click "Create new volume"
-
-Set "Name" to "sdb1"
-
-Select the new volume and click "Choose Volume"
-
-Set "Bus type" to "VirtIO"
-
----
 
 
 ### Configure the Virtual machine
 
 In the "Overview" section, set "Firmware" to "UEFI" and click "Apply".
 
-In the "CPUs" section, untick "Copy host CPU configuration" and set "Model" to "host-passthrough" (If it isn't on the list, type it in).
+In the "CPUs" section, untick "Copy host CPU configuration" and set "Model" to "host-passthrough" (If it isn't on the list, type it in). Tick "Manually set CPU topology", what you want here depends on your hardware.
 
-In the "Boot Options" section, tick "VirtIO Disk 1" and "SATA CDROM 1" and move "SATA CDROM 1" to the top
+In the "Boot Options" section, tick "SATA Disk 1" and "SATA CDROM 1" and move "SATA CDROM 1" to the top.
 
-In the "SATA CDROM 1" section, set "IO mode" to "threads"
+In the "SATA CDROM 1" section, set "IO mode" to "threads".
 
-In the "VirtIO Disk 1" section, set "IO mode" to "threads"
+In the "SATA Disk 1" section, set "IO mode" to "threads" and "Disk bus" to "VirtIO" (or SCSI if you use a dedicated SSD for the VM).
 
-In the "NIC" section, set "Device model" to "virtio"
+In the "NIC" section, set "Device model" to "virtio".
 
 
 #### Add a CDROM device for the virtio driver iso
 
-Download [virtio iso](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/)
+Download the latest [virtio iso](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/)
 
 Click "Add hardware" -> Select "Storage" and set "Device type" to "CDROM device"
 
 Click "Manage..." -> Click "Browse Local" -> Select the virtio-win iso file and click "Finish"
-
-In the "SATA CDROM 2" section, set "IO mode" to "threads"
 
 
 ### Pass-through a graphics card to the virtual machine
 
 Click "Add hardware" -> Select "PCI Host Device"
 
-Select the graphic card -> Click "Finish"
+Select the graphics card -> Click "Finish"
 
-Repeat for graphic cards hdmi audio device
+Select the graphics cards audio controller -> Click "Finish"
 
+
+### Install Windows
+
+Install Windows like you normally would, but at the disk selection screen, click "Load driver" -> "Browse" -> 
+
+Navigate to the "virtio-win" CD drive -> viostor
+
+Select to the right sub-folder for your Windows version and cpu architecture (example: E:\viostor\w10\amd64) then click "OK"
+
+Select "Red Hat VirtIO SCSI controller" and click "Next"
+
+
+### Configure Windows
+
+Start the Device Manager
+
+Righ-click on "Ethernet Controller" -> "Update driver" -> "Browse my computer for driver software" -> Browse -> Select the virtio-win CD drive and click "OK" -> Click "Next" -> Click "Install"
+
+Repeat the previous step for "PCI Device"
+
+Install the drivers for your graphics card (If you have an nVidia card see [Nvidia error 43](Nvidia-error-43)).
+
+
+## Troubleshooting
 
 ### Nvidia error 43
 
+Fix error 43 with nVidia GPU
+
 ```
-virsh edit <vm_name>
+sudo EDITOR=nano virsh edit <vm_name>
 ```
 
 ```xml
@@ -152,6 +150,7 @@ virsh edit <vm_name>
     </kvm>
   </features>
 ```
+
 
 ### EVDEV Passthrough
 
@@ -208,7 +207,7 @@ Switch the input devices from PS/2 to Virtio driver
 ### Looking Glass
 
 ```sh
-sudo virsh edit <vm_name>
+sudo EDITOR=nano virsh edit <vm_name>
 ```
 
 ```xml
@@ -253,7 +252,7 @@ Round up to the nearest power of two (n^2)
 ```
 
 ```
-sudo virsh edit VM_NAME
+sudo EDITOR=nano virsh edit VM_NAME
 ```
 
 ```xml
@@ -340,7 +339,43 @@ reboot
 cat /proc/meminfo
 ```
 
+### Use a dedicated SSD
+
+wip: Find out the path to the drive you want to use (ex. /dev/sdb)
+```
+sudo parted --list
+```
+
+Select "Select or create custom storage" -> Click "Manage..." -> Click "Add Pool"
+
+In step 1, Set "Name:" to "win_ssd" and "Type:" to "disk"
+
+In step 2:
+- Click "Browse" next to "Source Path", navigate to "/dev/disk/by-id/" and select the drive you want to use.
+- Tick "Build Pool"? and click "Finish"
+
+Select the new pool and click "Create new volume"
+
+Set "Name" to "sdb1"
+
+Select the new volume and click "Choose Volume"
+
+```
+sudo EDITOR=nano virsh edit VM_NAME
+```
+
+```xml
+<domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+  <disk type='block' device='disk'>
+    <source dev='/dev/disk/by-id/'/>
+  </disk>
+</domain>
+```
+
+Replace /dev/disk/by-id/ with the path to your drive
+
 
 ## References
 https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF
+
 https://solus-project.com/forums/viewtopic.php?f=11&t=1479&sid=597a58c06f144e3a778bc6a1d49e7de2
