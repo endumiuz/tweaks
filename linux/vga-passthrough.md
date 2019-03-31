@@ -8,7 +8,7 @@ Notes:
 Todo:
 - Add [Using identical guest and host GPUs](https://wiki.archlinux.org/index.php/PCI_passthrough_via_OVMF#Using_identical_guest_and_host_GPUs) to the guide
 - Add how to create a network bridge
-- [Scream Network Audio](https://github.com/duncanthrax/scream) - Sound ich9 -> Remove
+- [Scream Network Audio](https://github.com/duncanthrax/scream) / Sound ich9 -> Remove
 - More performance optimizations
 - Add troubleshooting section and move nvidia error 43 there
 
@@ -26,21 +26,17 @@ Summary:
 
 ## Isolating the GPU
 
-Install dependencies:
-```bash
-sudo eopkg install dracut
-```
-
 Download [vfio-bind.sh](https://raw.githubusercontent.com/gmol1/vfio-bind/master/vfio-bind.sh) from https://github.com/gmol1/vfio-bind
 
 Run vfio-bind.sh:
 ```bash
+sudo eopkg install dracut
 chmod +x vfio-bind.sh
 sudo ./vfio-bind.sh
 ```
 Reboot
 
-Verify that the GPU and its audio controller now are using vfio-pci:
+Verify that the GPU and its audio controller are now using vfio-pci:
 ```
 lspci -nnk
 ```
