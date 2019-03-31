@@ -26,7 +26,7 @@ Summary:
 
 ## Isolating the GPU
 
-Download [vfio-bind.sh](https://raw.githubusercontent.com/gmol1/vfio-bind/master/vfio-bind.sh) from https://github.com/gmol1/vfio-bind
+Download [vfio-bind.sh](https://raw.githubusercontent.com/endumiuz/vfio-bind/master/vfio-bind.sh) from https://github.com/endumiuz/vfio-bind
 
 Run vfio-bind.sh:
 ```bash
