@@ -293,18 +293,9 @@ WantedBy=timers.target
 
 ```
 #!/bin/bash
-# -*- coding: utf-8 -*-
-
-if [ "$EUID" -ne 0 ]; then
-    echo "This script must be run as root"
-    exit 1
-fi
-
-echo "Creating shared memory file..."
 touch /dev/shm/looking-glass
 chown root:kvm /dev/shm/looking-glass
 chmod 660 /dev/shm/looking-glass
-echo "Done"
 ```
 
 In Windows
